@@ -1,15 +1,12 @@
-# Redis Date Clean
+# Redis 数据清理
 
-[中文看这里]
-
-
-- support regex 
-- support ZSET,LIST clean
+- 支持 正则表达式
+- 支持 ZSET,LIST 的清理
 
 ![Setting][idSet]
 
 
-## Install
+## 安装
 
 ### step 1: install module
 Using npm:
@@ -18,14 +15,13 @@ Using npm:
 
 
 
-## Changelog
-
+## 更新记录
 
 ### 0.0.1
-Implement it.
+实现功能。
 
-## Config
-  Config file is json:
+## 配置 
+  配置文件采用json格式，定义了每个匹配，结构大致如下:
 
 ```javascript
  {
@@ -57,41 +53,39 @@ Implement it.
 ```
 
 ### redis
-Set redis Server Infomation:
-- **host**, redis Server IP
-- **port**, redis Server Port
+配置操作的redis数据库的地址
+- **host**, redis服务器的IP；
+- **port**, redis服务器的端口号；
 
-
-### api
-* searchKey(ioredisIns, keys), search key
-* cleanKey(ioredisIns, keys), clean key
 ### keys
-Array，clean redis key config。
+数组，清理的redis键的配置。
 
-* **name**, descript info
-* **type**, clean type
-	- **zset**, clear ZSET
-	- **list**，clear LIST 
-	- **key**，clear redis key, set expire implement remove this key
-	- **hash**，clear redis hash data's field, call hdel do it
-* **match**, find the matched redis key, see *redis keys* synctax
-* **action**, operation
-	- **style**, operation method, support ( rank|score|rem|trim )。
-		- **rank**, it's valid when type is *ZSET* , call *zremrangebyrank*
-		- **score**,it's valid when type is *ZSET* , call *zremrangebyscore*
-		- **rem**, it's valid when type is *LIST* , call *lrem*
-		- **trim**, it's valid when type is *LIST* , call *ltrim*
-	- **min**,js expression, the min value, use for  ZSET and  LIST's trim
-	- **max**,js expression, the max value, use for  ZSET and  LIST's trim
-	- **expire**, number( second ),it's valid when type is key, set key's expire
-	- **regex**, the key's regex,support sub match
-    - **attr**, sub match attribute
-		- **matchType**, match type, support int,string,dateStramp
-			- **min**, min Value
-			- **max**, max value
+* **name**,清理操作描述信息
+* **type**,清理类型
+	- **zset**,清理 ZSET 数据
+	- **list**，清理 LIST 数据
+	- **key**，清理redis key,通过设置超期值来实现
+	- **hash**，清理redis hash field,通过 hdel 实现，检测hash key的域是否满足删除条件
+* **match**，查找匹配的redis键，参照 redis keys 的语法。
+* **action**，操作
+	- **style**，操作的方式,支持 ( rank|score|rem|trim )。
+		- **rank**，type为 *ZSET* 时有效，对应调用 *zremrangebyrank* 实现数据的清理
+		- **score**,type为 *ZSET* 时有效，对应调用 *zremrangebyscore* 实现数据的清理
+		- **rem**，type为 *LIST* 时有效，对应调用 *lrem* 实现数据的清理
+		- **trim**，type为 *LIST* 时有效，对应调用 *ltrim* 实现数据的清理
+	- **min**，js表达式，移除范围低值，用于 ZSET 和 LIST 的 trim
+	- **max**，js表达式，移除范围高值，用于 ZSET 和 LIST 的 trim
+	- **count**，js表达式，移除数量，用于 LIST 的 rem
+	- **value**，js表达式，移除数值，用于 LIST 的 rem
+	- **expire**, 数字，单位秒， type为key时有效，设置 key 的超期值
+	- **regex**， 键的匹配正则表达式，支持子匹配，子匹配的匹配判断参数在 下面的 attr里面设置
+    - **attr**, 子匹配属性
+		- **matchType**，匹配类型，支持整形(int)，字符串(string)，时间戳(dateStamp)
+			- **min**，匹配范围低值
+			- **max**，匹配范围高值，对 string类型无效
 
 
-Below is the configuration of detailed examples:
+下面是配置的详细例子
 
 ```javascript
 {
@@ -188,12 +182,11 @@ Copyright 2016+ shudingbo
 
 Licensed under the **[MIT License]**.
 
-
+[node-schedule]: https://github.com/node-schedule/node-schedule
 [node-redis]:https://github.com/NodeRedis/node_redis
 [cron-parser]: https://github.com/harrisiirak/cron-parser
-[sdb-schedule]: https://github.com/shudingbo/sdb-schedule
 [sdb-schedule-ui]: https://github.com/shudingbo/sdb-schedule-ui
+[sdb-schedule]: https://github.com/shudingbo/sdb-schedule
 [download]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/sdb-schedule-ui.7z
 [idMain]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/main.jpg  "Main"
 [idSet]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/setting.jpg  "Setting"
-[中文看这里]:https://github.com/shudingbo/scp-cleanRedis/blob/master/README-cn.md

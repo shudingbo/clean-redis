@@ -1,0 +1,31 @@
+{
+  "name": "clean-redis",
+  "version": "0.0.1",
+  "description": "Clean Redis Key",
+  "main": "./lib/clean.js",
+  "scripts": {
+    "test": "node ./test/test.js"
+  },
+  "keywords": [
+    "redis",
+    "clean",
+    "clear",
+    "hash",
+    "list",
+    "zset",
+    "key"
+  ],
+  "author": {
+    "name": "shudingbo",
+    "email": "shudingbo@qq.com"
+  },
+  "license": "MIT",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shudingbo/clean-redis"
+  },
+  "devDependencies": {
+    "ioredis": "^4.19.4"
+  }
+}
