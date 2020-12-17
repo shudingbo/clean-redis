@@ -86,7 +86,7 @@ Array，clean redis key config。
 	- **expire**, number( second ),it's valid when type is key, set key's expire
 	- **regex**, the key's regex,support sub match
     - **attr**, sub match attribute
-		- **matchType**, match type, support int,string,dateStramp
+		- **matchType**, match type, support int,string,dateStramp,date1
 			- **min**, min Value
 			- **max**, max value
 
