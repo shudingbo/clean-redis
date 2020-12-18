@@ -1,6 +1,6 @@
 {
   "name": "clean-redis",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Clean Redis Key",
   "main": "./lib/clean.js",
   "scripts": {

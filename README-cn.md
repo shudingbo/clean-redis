@@ -1,29 +1,54 @@
 # Redis 数据清理
 
 - 支持 正则表达式
-- 支持 ZSET,LIST 的清理
-
-![Setting][idSet]
-
+- 支持 Key,ZSET,LIST,Hash field 的清理
 
 ## 安装
 
-### step 1: install module
 Using npm:
+```
+$ npm install clean-redis
+```
 
-    $ npm install scp-cleanRedis
+## API
+ * [searchKey](#searchKey), 查找要清理的redis键
+ * [cleanKey](#cleanKey), 直接清理redis键
 
+ The matcher config [KeyCfg](#keyCfg). 
 
+### searchKey
+	Search will clean redis key. 
+```
+/**
+ * @param {import('ioredis').Redis} rd ioredis 实例 
+ * @param {KeyCfg[]} keys 键配置文件
+ * 
+ * @return {MatchItem[]} the match result 
+ */
+async function searchKey( rd, keys )
+```
+* rd, ioredis 实例
+* keys, [KeyCfg](#keyCfg)
 
-## 更新记录
+### cleanKey
+	Clean redis key.
+```
+/**
+ * 
+ * @param {import('ioredis').Redis} rd ioredis 实例 
+ * @param {KeyCfg[]} keys 清理键配置文件 
+ * @param {function} cb 回调函数
+ */
+async function cleanKey( rd, keys, cb )
+```
+* rd, ioredis 实例
+* keys, [KeyCfg](#keyCfg)
+* cb, callback function `cb( key, field? )`
+ 	- key, the clean key name
+	- field, the clean hash field
 
-### 0.0.1
-实现功能。
-
-## 配置 
-  配置文件采用json格式，定义了每个匹配，结构大致如下:
-
-```javascript
+#### keyCfg
+```
  {
 	"keys":[
 		{
@@ -50,46 +75,62 @@ Using npm:
 	]
 };
 
+/** Key Matcher Attr
+ * @typedef {Object} KeyMatcherAttr
+ * @property {string} matchType - int | string | datestamp | date1
+ * @property {string|number} min - the min value， can js expression
+ * @property {string|number} max - the max value， can js expression
+ */
+
+
+/** Key Matcher
+ * @typedef {Object} KeyMatcher
+ * @property {string} regex the matcher regExp string
+ * @property {KeyMatcherAttr[]} attr zhe matcher unit attr 
+ */
+
+
+/** Key Match rule
+ *
+ * @typedef {Object} KeyMatch
+ * @property {string} pattern - redis key filter, follow redis.keys syntax. (https://redis.io/commands/keys)
+ * @property {KeyMatcher} matcher - Matcher config
+ */
+
+
+
+/** clean key config
+ *
+ * @typedef {Object} KeyCfg
+ * @property {string} name - descript,name
+ * @property {string} type - key | zset | list | hash
+ * @property {number} expire - use set key expire
+ * @property {string} style - trim | rem | rank | score
+ *                - trim | rem use for list type
+ *                - rank | score use for zser type
+ * @property {number} min the min value， can js expression, use for zset|list
+ * @property {number} max the max value， can js expression, use for zset|list
+ * @property {KeyMatch} key  - key match config
+ */
+
+
+ /** The Match redis key
+ *
+ * @typedef {Object} MatchItem
+ * @property {string} type the key type
+ * @property {string} key the redis key
+ * @property {number} exp the exp value, for key type
+ * @property {string} style the clean style, for list | zset type
+ * @property {string} field the hash field will be clean
+ * @property {number} min the list|zset min value
+ * @property {number} max the list|zset max value
+ */
 ```
-
-### redis
-配置操作的redis数据库的地址
-- **host**, redis服务器的IP；
-- **port**, redis服务器的端口号；
-
-### keys
-数组，清理的redis键的配置。
-
-* **name**,清理操作描述信息
-* **type**,清理类型
-	- **zset**,清理 ZSET 数据
-	- **list**，清理 LIST 数据
-	- **key**，清理redis key,通过设置超期值来实现
-	- **hash**，清理redis hash field,通过 hdel 实现，检测hash key的域是否满足删除条件
-* **match**，查找匹配的redis键，参照 redis keys 的语法。
-* **action**，操作
-	- **style**，操作的方式,支持 ( rank|score|rem|trim )。
-		- **rank**，type为 *ZSET* 时有效，对应调用 *zremrangebyrank* 实现数据的清理
-		- **score**,type为 *ZSET* 时有效，对应调用 *zremrangebyscore* 实现数据的清理
-		- **rem**，type为 *LIST* 时有效，对应调用 *lrem* 实现数据的清理
-		- **trim**，type为 *LIST* 时有效，对应调用 *ltrim* 实现数据的清理
-	- **min**，js表达式，移除范围低值，用于 ZSET 和 LIST 的 trim
-	- **max**，js表达式，移除范围高值，用于 ZSET 和 LIST 的 trim
-	- **count**，js表达式，移除数量，用于 LIST 的 rem
-	- **value**，js表达式，移除数值，用于 LIST 的 rem
-	- **expire**, 数字，单位秒， type为key时有效，设置 key 的超期值
-	- **regex**， 键的匹配正则表达式，支持子匹配，子匹配的匹配判断参数在 下面的 attr里面设置
-    - **attr**, 子匹配属性
-		- **matchType**，匹配类型，支持整形(int)，字符串(string)，时间戳(dateStamp)
-			- **min**，匹配范围低值
-			- **max**，匹配范围高值，对 string类型无效
-
 
 下面是配置的详细例子
 
 ```javascript
-{
-	"redis":{ "host":"127.0.0.1","port":6379 },
+
 	"keys":[
 		{
 			"name":"清理zset类型",
@@ -118,7 +159,7 @@ Using npm:
 			"min"  : 0,
 			"max"  : 3
 			"key": {
-				"pattern":"brnn:winls",
+				"pattern":"ww:winls",
 				"matcher":{
 					"min"  : 0,
 					"max"  : 3
@@ -126,7 +167,7 @@ Using npm:
 			}
 		},
 		{
-        "name":"清理Hash",
+        "name":"清理Hash field",
 				"type":"hash",
 				"key": {
 					"pattern":"*:recy",
@@ -171,22 +212,10 @@ Using npm:
 			}
 		}
 	]
-
-};
 ```
-
 
 ## Copyright and license
 
-Copyright 2016+ shudingbo
-
+Copyright 2020+ shudingbo
 Licensed under the **[MIT License]**.
 
-[node-schedule]: https://github.com/node-schedule/node-schedule
-[node-redis]:https://github.com/NodeRedis/node_redis
-[cron-parser]: https://github.com/harrisiirak/cron-parser
-[sdb-schedule-ui]: https://github.com/shudingbo/sdb-schedule-ui
-[sdb-schedule]: https://github.com/shudingbo/sdb-schedule
-[download]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/sdb-schedule-ui.7z
-[idMain]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/main.jpg  "Main"
-[idSet]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/setting.jpg  "Setting"

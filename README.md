@@ -1,33 +1,55 @@
-# Redis Date Clean
+# Redis Data Clean
 
 [中文看这里]
-
-
 - support regex 
-- support ZSET,LIST clean
-
-![Setting][idSet]
-
+- support Key,ZSET,LIST, Hash field clean
 
 ## Install
 
-### step 1: install module
 Using npm:
+```
+$ npm install clean-redis
+```
 
-    $ npm install scp-cleanRedis
+## API
+ * [searchKey](#searchKey), Find the Redis key to clean
+ * [cleanKey](#cleanKey), Clear the Redis key directly
 
+ The matcher config [KeyCfg](#keyCfg). 
 
+### searchKey
+	Search will clean redis key. 
+```
+/**
+ * @param {import('ioredis').Redis} rd ioredis instance 
+ * @param {KeyCfg[]} keys The clean Key config
+ * 
+ * @return {MatchItem[]} the match result 
+ */
+async function searchKey( rd, keys )
+```
+* rd, ioredis instance
+* keys, [KeyCfg](#keyCfg)
 
-## Changelog
+### cleanKey
+	Clean redis key.
+```
+/**
+ * 
+ * @param {import('ioredis').Redis} rd ioredis instance 
+ * @param {KeyCfg[]} keys The clean Key config
+ * @param {function} cb callback
+ */
+async function cleanKey( rd, keys, cb )
+```
+* rd, ioredis instance
+* keys, [KeyCfg](#keyCfg)
+* cb, callback function `cb( key, field? )`
+ 	- key, the clean key name
+	- field, the clean hash field
 
-
-### 0.0.1
-Implement it.
-
-## Config
-  Config file is json:
-
-```javascript
+#### keyCfg
+```
  {
 	"keys":[
 		{
@@ -54,51 +76,64 @@ Implement it.
 	]
 };
 
+/** Key Matcher Attr
+ * @typedef {Object} KeyMatcherAttr
+ * @property {string} matchType - int | string | datestamp | date1
+ * @property {string|number} min - the min value， can js expression
+ * @property {string|number} max - the max value， can js expression
+ */
+
+
+/** Key Matcher
+ * @typedef {Object} KeyMatcher
+ * @property {string} regex the matcher regExp string
+ * @property {KeyMatcherAttr[]} attr zhe matcher unit attr 
+ */
+
+
+/** Key Match rule
+ *
+ * @typedef {Object} KeyMatch
+ * @property {string} pattern - redis key filter, follow redis.keys syntax. (https://redis.io/commands/keys)
+ * @property {KeyMatcher} matcher - Matcher config
+ */
+
+
+
+/** clean key config
+ *
+ * @typedef {Object} KeyCfg
+ * @property {string} name - descript,name
+ * @property {string} type - key | zset | list | hash
+ * @property {number} expire - use set key expire
+ * @property {string} style - trim | rem | rank | score
+ *                - trim | rem use for list type
+ *                - rank | score use for zser type
+ * @property {number} min the min value， can js expression, use for zset|list
+ * @property {number} max the max value， can js expression, use for zset|list
+ * @property {KeyMatch} key  - key match config
+ */
+
+
+ /** The Match redis key
+ *
+ * @typedef {Object} MatchItem
+ * @property {string} type the key type
+ * @property {string} key the redis key
+ * @property {number} exp the exp value, for key type
+ * @property {string} style the clean style, for list | zset type
+ * @property {string} field the hash field will be clean
+ * @property {number} min the list|zset min value
+ * @property {number} max the list|zset max value
+ */
 ```
-
-### redis
-Set redis Server Infomation:
-- **host**, redis Server IP
-- **port**, redis Server Port
-
-
-### api
-* searchKey(ioredisIns, keys), search key
-* cleanKey(ioredisIns, keys), clean key
-### keys
-Array，clean redis key config。
-
-* **name**, descript info
-* **type**, clean type
-	- **zset**, clear ZSET
-	- **list**，clear LIST 
-	- **key**，clear redis key, set expire implement remove this key
-	- **hash**，clear redis hash data's field, call hdel do it
-* **match**, find the matched redis key, see *redis keys* synctax
-* **action**, operation
-	- **style**, operation method, support ( rank|score|rem|trim )。
-		- **rank**, it's valid when type is *ZSET* , call *zremrangebyrank*
-		- **score**,it's valid when type is *ZSET* , call *zremrangebyscore*
-		- **rem**, it's valid when type is *LIST* , call *lrem*
-		- **trim**, it's valid when type is *LIST* , call *ltrim*
-	- **min**,js expression, the min value, use for  ZSET and  LIST's trim
-	- **max**,js expression, the max value, use for  ZSET and  LIST's trim
-	- **expire**, number( second ),it's valid when type is key, set key's expire
-	- **regex**, the key's regex,support sub match
-    - **attr**, sub match attribute
-		- **matchType**, match type, support int,string,dateStramp,date1
-			- **min**, min Value
-			- **max**, max value
-
-
-Below is the configuration of detailed examples:
+Here is a detailed example of the configuration
 
 ```javascript
-{
-	"redis":{ "host":"127.0.0.1","port":6379 },
+
 	"keys":[
 		{
-			"name":"清理zset类型",
+			"name":" clean zset",
 			"type":"zset",
 			"style": "score",
 			"min": "'-inf'",
@@ -118,13 +153,13 @@ Below is the configuration of detailed examples:
 			}
 		},
 		{
-			"name":"清理 List",
+			"name":"clean List",
 			"type":"list",
 			"style":"trim",
 			"min"  : 0,
 			"max"  : 3
 			"key": {
-				"pattern":"brnn:winls",
+				"pattern":"ww:winls",
 				"matcher":{
 					"min"  : 0,
 					"max"  : 3
@@ -132,7 +167,7 @@ Below is the configuration of detailed examples:
 			}
 		},
 		{
-        "name":"清理Hash",
+        "name":"clean Hash field",
 				"type":"hash",
 				"key": {
 					"pattern":"*:recy",
@@ -149,7 +184,7 @@ Below is the configuration of detailed examples:
 					}
         },
 		{
-			"name":"清理key",
+			"name":"clean key",
 			"type":"key",
 			"key": {
 				"pattern":"rcard:20??????:*:*",
@@ -177,23 +212,9 @@ Below is the configuration of detailed examples:
 			}
 		}
 	]
-
-};
 ```
-
 
 ## Copyright and license
 
-Copyright 2016+ shudingbo
-
+Copyright 2020+ shudingbo
 Licensed under the **[MIT License]**.
-
-
-[node-redis]:https://github.com/NodeRedis/node_redis
-[cron-parser]: https://github.com/harrisiirak/cron-parser
-[sdb-schedule]: https://github.com/shudingbo/sdb-schedule
-[sdb-schedule-ui]: https://github.com/shudingbo/sdb-schedule-ui
-[download]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/sdb-schedule-ui.7z
-[idMain]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/main.jpg  "Main"
-[idSet]: https://github.com/shudingbo/sdb-public/blob/master/sdb-schedule-ui/setting.jpg  "Setting"
-[中文看这里]:https://github.com/shudingbo/scp-cleanRedis/blob/master/README-cn.md
